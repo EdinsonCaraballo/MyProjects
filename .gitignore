@@ -1,0 +1,89 @@
+# ==============================================================================
+# MyProjects Monorepo - Git Ignore Rules
+# ==============================================================================
+
+# --- Node / Web / Mobile Frontend ---
+**/node_modules/
+**/.angular/
+**/dist/
+**/tmp/
+**/out-tsc/
+**/.npm
+**/.eslintcache
+**/.expo/
+**/android/app/build/
+**/ios/build/
+**/.metro/
+
+# --- Python / Django / Backend ---
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+**/.Python
+**/build/
+**/develop-eggs/
+**/dist/
+**/downloads/
+**/eggs/
+**/.eggs/
+**/lib/
+**/lib64/
+**/parts/
+**/sdist/
+**/var/
+**/wheels/
+**/share/python-wheels/
+**/*.egg-info/
+**/.installed.cfg
+**/*.egg
+**/manifest
+**/spec
+**/.pytest_cache/
+**/.tox/
+**/.coverage
+**/htmlcov/
+**/.venv/
+**/venv/
+**/ENV/
+**/env/
+
+# --- Databases & Local Settings ---
+**/*.db
+**/*.sqlite3
+**/*.sqlite3-journal
+**/local_settings.py
+
+# --- Environment files & Secrets ---
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.*
+*.env
+
+# --- IDEs / Editors ---
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+.project
+.classpath
+.settings/
+.cproject
+
+# --- OS temporary files ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# --- Docker ---
+.docker/
+docker-compose.override.yml
