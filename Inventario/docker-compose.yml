@@ -3,34 +3,42 @@ services:
     image: postgres:15-alpine
     container_name: inventario_db
     restart: always
+    # Hardcode DB credentials directly to avoid shell env var conflicts
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB:       inv_secure_db_prod
+      POSTGRES_USER:     inv_db_user_admin
+      POSTGRES_PASSWORD: Inv2026SecureDbPass
     ports:
-      - "${DB_PORT}:5432"
+      - "54321:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./database:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inv_db_user_admin -d inv_secure_db_prod"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   backend:
     build: ./backend
     container_name: inventario_backend
     ports:
-      - "${BACKEND_PORT}:8000"
+      - "8765:8000"
     volumes:
       - ./backend:/app
     environment:
       - PYTHONUNBUFFERED=1
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_DEBUG=${DJANGO_DEBUG}
-      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
+      - DB_NAME=inv_secure_db_prod
+      - DB_USER=inv_db_user_admin
+      - DB_PASSWORD=Inv2026SecureDbPass
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DJANGO_SECRET_KEY=django-insecure-f3a74bb6c905b22b1049ea2837265a6e8e2d4d8c7c9b
+      - DJANGO_DEBUG=True
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     stdin_open: true
     tty: true
 
@@ -38,16 +46,16 @@ services:
     build: ./frontend-web
     container_name: inventario_frontend_web
     ports:
-      - "${FRONTEND_WEB_PORT}:3000"
+      - "3721:3721"
     volumes:
       - ./frontend-web:/app
       - /app/node_modules
     environment:
-      - REACT_APP_API_URL=${REACT_APP_API_URL}
-      - PORT=3000
+      - VITE_API_URL=http://localhost:8765
+      - PORT=3721
     depends_on:
       - backend
-    command: npm run dev -- --host 0.0.0.0 --port 3000
+    command: npm run dev -- --host 0.0.0.0 --port 3721
     stdin_open: true
     tty: true
 

@@ -1,0 +1,16 @@
+flowchart TD
+    A([Inicio: Cliente accede a la app]) --> B[Selecciona sucursal]
+    B --> C{¿Sucursal tiene delivery?}
+    C -->|Sí| D[Muestra productos con precios]
+    C -->|No| D
+    D --> E[Agrega productos al carrito]
+    E --> F[Selecciona método de pago]
+    F --> G{¿Es pago en divisa extranjera?}
+    G -->|Sí| H[Consulta tasa de cambio actual]
+    G -->|No| I[Calcula total en moneda local]
+    H --> I
+    I --> J[Confirma pedido]
+    J --> K[Guarda en tabla pedido]
+    K --> L[Registra detalles en pedido_detalles]
+    L --> M[Dispara proceso de inventario]
+    M --> N([Fin: Pedido creado])

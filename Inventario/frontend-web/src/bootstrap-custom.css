@@ -1,0 +1,130 @@
+/* ── Custom Theme and Overrides on top of Bootstrap 5 ── */
+
+:root {
+  --purple-accent: #8b5cf6;
+  --purple-glow: rgba(139, 92, 246, 0.15);
+  --glass-bg: rgba(18, 20, 38, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(25px);
+  --body-bg: radial-gradient(circle at top right, #1a153b 0%, #0d0e1b 100%);
+}
+
+body {
+  background: var(--body-bg) !important;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #f3f4f6 !important;
+}
+
+/* Glassmorphism Cards */
+.glass-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+}
+
+/* Glass Inputs & Selects */
+.form-control, .form-select {
+  background-color: rgba(20, 22, 43, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+  backdrop-filter: blur(10px);
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--purple-accent) !important;
+  box-shadow: 0 0 0 0.25rem rgba(139, 92, 246, 0.25) !important;
+  background-color: rgba(20, 22, 43, 0.8) !important;
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Sidebar Styling */
+.sidebar-list .list-group-item {
+  background: transparent !important;
+  border: none !important;
+  color: rgba(255, 255, 255, 0.65);
+  border-radius: 8px !important;
+  margin-bottom: 2px;
+  padding: 10px 14px;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+.sidebar-list .list-group-item:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #fff;
+}
+
+.sidebar-list .list-group-item.active {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: #fff;
+  border-left: 3px solid var(--purple-accent) !important;
+  border-radius: 0 8px 8px 0 !important;
+}
+
+/* Custom Button */
+.btn-primary {
+  background-color: var(--purple-accent) !important;
+  border-color: var(--purple-accent) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3) !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.45) !important;
+}
+
+.btn-outline-secondary {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.btn-outline-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+}
+
+/* Modal Overlay Blur */
+.modal {
+  backdrop-filter: blur(10px) !important;
+}
+
+.modal-content {
+  background: rgba(15, 17, 34, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(20px);
+  border-radius: 16px !important;
+}
+
+/* Layout Anims */
+.fade-in-up {
+  animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Table Hover accent */
+.table-hover tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}

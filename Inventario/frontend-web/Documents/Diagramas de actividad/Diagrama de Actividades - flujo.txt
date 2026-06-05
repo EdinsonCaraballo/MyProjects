@@ -1,0 +1,142 @@
+---- Diagrama de Actividades - Flujo 1: Cliente realiza un pedido
+flowchart TD
+    A([Inicio: Cliente accede a la app]) --> B[Selecciona sucursal]
+    B --> C{¿Sucursal tiene delivery?}
+    C -->|Sí| D[Muestra productos con precios]
+    C -->|No| D
+    D --> E[Agrega productos al carrito]
+    E --> F[Selecciona método de pago]
+    F --> G{¿Es pago en divisa extranjera?}
+    G -->|Sí| H[Consulta tasa de cambio actual]
+    G -->|No| I[Calcula total en moneda local]
+    H --> I
+    I --> J[Confirma pedido]
+    J --> K[Guarda en tabla pedido]
+    K --> L[Registra detalles en pedido_detalles]
+    L --> M[Dispara proceso de inventario]
+    M --> N([Fin: Pedido creado])
+
+---- Diagrama de Actividades - Flujo 2: Procesamiento de inventario (descuento de lotes)
+flowchart TD
+    A([Inicio: Pedido confirmado]) --> B[Obtener productos del pedido_detalles]
+    B --> C[Buscar lotes disponibles por producto y sucursal]
+    C --> D{¿Lote con cantidad_actual > 0?}
+    D -->|No| E[Marcar producto como sin stock]
+    E --> F[Notificar a cliente]
+    F --> Z([Fin: Pedido incompleto])
+    
+    D -->|Sí| G[Seleccionar lote más próximo a vencer<br/>FIFO por fecha_vencimiento]
+    G --> H{Cantidad pedida <= cantidad_actual del lote?}
+    H -->|Sí| I[Descontar del lote seleccionado]
+    H -->|No| J[Usar múltiples lotes]
+    J --> I
+    
+    I --> K[Registrar en historial_inventario]
+    K --> L[Tipo_movimiento = 'VENTA', factor = -1]
+    L --> M[Actualizar cantidad_actual del lote]
+    M --> N{Cantidad_actual = 0?}
+    N -->|Sí| O[Marcar lote como agotado]
+    N -->|No| P[Lote aún disponible]
+    O --> Q[Registrar en historial_inventario lote agotado]
+    Q --> R([Fin: Inventario actualizado])
+    P --> R
+
+
+---- Diagrama de Actividades - Flujo 3: Gestión de pagos y delivery
+flowchart TD
+    A([Inicio: Pedido en estado 'Pendiente']) --> B[Cliente selecciona método de pago]
+    B --> C{¿Método de pago?}
+    
+    C -->|Pago móvil / Transferencia| D[Generar referencia y subir captura]
+    C -->|Efectivo contra entrega| E[Marcar pago como 'Pendiente en destino']
+    C -->|Pago en divisa extranjera| F[Calcular monto en moneda destino usando tasas_cambio]
+    
+    D --> G[Guardar en pagos_pedido]
+    E --> G
+    F --> G
+    
+    G --> H{¿Pedido requiere delivery?}
+    H -->|No| I[Marcar pedido como 'Listo para recoger']
+    H -->|Sí| J[Verificar delivery_config_sucursal]
+    
+    J --> K{¿Costo fijo delivery?}
+    K -->|Sí| L[Agregar costo_fijo_delivery al total]
+    K -->|No| M[Calcular costo por distancia]
+    
+    L --> N[Crear despacho_delivery]
+    M --> N
+    
+    N --> O[Asignar motorizado/repartidor]
+    O --> P[Guardar en rutas_delivery]
+    P --> Q[Marcar pedido como 'En camino']
+    Q --> R([Fin: Pedido en proceso de entrega])
+    
+    I --> S([Fin: Pedido listo para recoger])
+
+
+
+---- Diagrama de Actividades - Flujo 4: Baja por vencimiento de productos (proceso batch)
+flowchart TD
+    A([Inicio: Job nocturno]) --> B[Buscar lotes con fecha_vencimiento <= hoy]
+    B --> C{¿Existen lotes vencidos?}
+    C -->|No| D([Fin: Sin cambios])
+    C -->|Sí| E[Por cada lote vencido]
+    
+    E --> F[Calcular cantidad_actual del lote]
+    F --> G{¿cantidad_actual > 0?}
+    G -->|No| H[Pasar al siguiente lote]
+    G -->|Sí| I[Registrar en historial_inventario]
+    
+    I --> J[Tipo_movimiento = 'AJUSTE_VENCIMIENTO', factor = -1]
+    J --> K[Cantidad a dar de baja = cantidad_actual]
+    K --> L[Motivo_detalle = 'Baja por vencimiento']
+    L --> M[Actualizar cantidad_actual = 0]
+    M --> N[Marcar lote como 'Vencido']
+    N --> O[Registrar fecha_actualizacion]
+    O --> H
+    
+    H --> P{¿Más lotes?}
+    P -->|Sí| E
+    P -->|No| Q[Generar reporte de bajas por vencimiento]
+    Q --> R([Fin: Proceso completado])
+
+
+
+---- Diagrama de Actividades General (Vista macro del sistema)
+flowchart TD
+    subgraph "Cliente App"
+        A1[Registro/Login] --> A2[Buscar productos]
+        A2 --> A3[Agregar favoritos]
+        A3 --> A4[Crear pedido]
+    end
+    
+    subgraph "Sistema de Inventario"
+        B1[Validar stock por lote] --> B2{¿Hay stock?}
+        B2 -->|Sí| B3[Reservar lote]
+        B2 -->|No| B4[Notificar falta de stock]
+        B3 --> B5[Registrar en historial_inventario]
+        B5 --> B6[Actualizar cantidad_actual]
+    end
+    
+    subgraph "Procesamiento de Pago"
+        C1[Seleccionar moneda] --> C2[Aplicar tasa de cambio]
+        C2 --> C3[Registrar en pagos_pedido]
+        C3 --> C4{¿Pago validado?}
+        C4 -->|Sí| C5[Pedido → Confirmado]
+        C4 -->|No| C6[Pedido → Cancelado]
+    end
+    
+    subgraph "Delivery"
+        D1{¿Requiere delivery?} -->|Sí| D2[Configurar despacho]
+        D2 --> D3[Asignar ruta]
+        D3 --> D4[Marcar como Entregado]
+        D1 -->|No| D5[Listo para recoger]
+    end
+    
+    A4 --> B1
+    B3 --> C1
+    C5 --> D1
+    D4 --> E([Fin: Pedido completado])
+    D5 --> E
+    B4 --> F([Fin: Pedido fallido])
+    C6 --> F

@@ -1,0 +1,434 @@
+classDiagram
+    class Company {
+        +int id PK
+        +int fk_type_document
+        +string logo
+        +int rif_cedula
+        +string logo_url
+        +string direccion_fiscal
+        +string nombre_comercial
+        +string name_razon_social
+        +string tipo_comercio
+        +string sitio_web
+        +string location
+        +int fk_estatus
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class Sucursal {
+        +int id PK
+        +int fk_company
+        +string nombre_sucursal
+        +string codigo_sucursal
+        +boolean ind_principal
+        +boolean ind_delivery
+        +string location
+        +time horario_apertura
+        +time horario_cierre
+        +int fk_estatus
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class Producto {
+        +int id PK
+        +string codigo_barras
+        +string codigo_inventario
+        +int fk_catalogo_productos
+        +boolean vence
+        +decimal stock_minimo
+        +decimal stock_maximo
+        +int fk_estatus
+        +int fk_compania
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class CatalogoProductos {
+        +int id PK
+        +string nombre
+        +string descripcion
+        +int fk_categoria
+        +int fk_estatus
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class Categoria {
+        +int id PK
+        +string nombre
+        +int fk_categoria
+        +int fk_estatus
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class LoteInventario {
+        +int id PK
+        +int fk_sucursal
+        +int fk_productos
+        +string numero_lote
+        +decimal cantidad_inicial
+        +decimal cantidad_actual
+        +int fk_moneda
+        +decimal precio_compra
+        +date fecha_produccion
+        +date fecha_vencimiento
+        +int fk_estatus
+        +int fk_compania
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class PrecioVenta {
+        +int id PK
+        +int fk_producto
+        +int fk_sucursal
+        +int fk_moneda
+        +decimal precio_venta_neto
+        +decimal porcentaje_iva
+        +decimal precio_venta_publico
+        +int fk_estatus
+        +int fk_compania
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class HistorialInventario {
+        +int id PK
+        +int fk_tipo_movimiento
+        +int fk_lote_inventario
+        +decimal cantidad
+        +decimal tasa_cambio_momento
+        +int referencia_id
+        +string motivo_detalle
+        +int fk_estatus
+        +int fk_compania
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class TipoMovimiento {
+        +int id PK
+        +string nombre
+        +int factor
+        +int fk_estatus
+        +int fk_compania
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class Moneda {
+        +int id PK
+        +string codigo_iso
+        +string nombre
+        +string simbolo
+        +boolean es_base
+        +int fk_estatus
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class TasaCambio {
+        +int id PK
+        +int fk_moneda_origen
+        +int fk_moneda_destino
+        +decimal tasa_cambio
+        +int fk_estatus
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class Cliente {
+        +int id PK
+        +string nombre
+        +string apellido
+        +string cedula_rif
+        +string telefono
+        +string correo
+        +int fk_usuario
+        +int fk_estatus
+        +int fk_compania
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class UsuarioCliente {
+        +int id PK
+        +string nombre
+        +string apellido
+        +string password_hash
+        +string cedula_rif
+        +string telefono
+        +string correo
+        +string location
+        +int fk_usuario
+        +int fk_estatus
+        +int fk_compania
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class Pedido {
+        +int id PK
+        +int fk_cliente
+        +int fk_sucursal
+        +datetime fecha_pedido
+        +decimal monto_total_base
+        +decimal monto_total_moneda_extranjera
+        +decimal tasa_cambio_pedido
+        +string fk_estatus
+        +boolean requiere_delivery
+        +int fk_compania
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class PedidoDetalle {
+        +int id PK
+        +int fk_pedido
+        +int fk_producto
+        +int fk_lote_inventario
+        +decimal cantidad
+        +decimal precio_unitario_momento
+        +int fk_compania
+    }
+
+    class ClienteFavorito {
+        +int id PK
+        +int fk_usuario_cliente
+        +int fk_producto
+        +datetime fecha_agregado
+        +int fk_usuario
+        +int fk_estatus
+        +int fk_compania
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class DireccionSucursal {
+        +int id PK
+        +int fk_pais
+        +int fk_region
+        +int fk_estado
+        +int fk_ciudad
+        +int fk_municipio
+        +int fk_parroquia
+        +int fk_sector
+        +boolean indicador_principal
+        +string nombre_direccion
+        +string tipo_direccion
+        +string codigo_postal
+        +int fk_estatus
+        +datetime fecha_registro
+        +string usuario_registro
+        +string usuario_modificacion
+        +datetime fecha_actualizacion
+    }
+
+    class Pais {
+        +int id PK
+        +string codigo_iso
+        +string nombre
+        +int fk_estatus
+    }
+
+    class Region {
+        +int id PK
+        +int fk_pais
+        +string nombre
+        +int fk_estatus
+    }
+
+    class Estado {
+        +int id PK
+        +int fk_regiones
+        +string nombre
+        +int fk_estatus
+    }
+
+    class Ciudad {
+        +int id PK
+        +int fk_estados
+        +string nombre
+        +int fk_estatus
+    }
+
+    class Municipio {
+        +int id PK
+        +int fk_estados
+        +string nombre
+        +int fk_estatus
+    }
+
+    class Parroquia {
+        +int id PK
+        +int fk_municipios
+        +string nombre
+        +int fk_estatus
+    }
+
+    class Sector {
+        +int id PK
+        +int fk_parroquia
+        +string nombre
+        +int fk_estatus
+    }
+
+    class PagoPedido {
+        +int id PK
+        +int fk_pedido
+        +int fk_metodo_pago
+        +int fk_moneda
+        +decimal monto_pagado
+        +string referencia_bancaria
+        +string captura_pago_url
+        +string fk_estatus_pago
+        +int fk_estatus
+        +int fk_compania
+    }
+
+    class MetodoPago {
+        +int id PK
+        +string nombre
+        +int fk_estatus
+        +int fk_compania
+    }
+
+    class DeliveryConfigSucursal {
+        +int id PK
+        +int fk_sucursal
+        +boolean posee_delivery
+        +decimal costo_fijo_delivery
+        +decimal radio_cobertura_km
+        +int fk_compania
+    }
+
+    class DespachoDelivery {
+        +int id PK
+        +int fk_pedido
+        +string direccion_entrega_texto
+        +int fk_estado
+        +int fk_ciudad
+        +int fk_municipio
+        +int fk_parroquia
+        +string location
+        +string nombre_repartidor
+        +string telefono_repartidor
+        +datetime fecha_entrega
+        +int fk_compania
+    }
+
+    class Perfil {
+        +int id PK
+        +string nombre_perfil
+        +int fk_sucursal
+        +int fk_estatus
+        +int fk_compania
+    }
+
+    class Usuario {
+        +int id PK
+        +string numero_documento
+        +string tipo_documento
+        +string nombre
+        +string correo
+        +string telefono
+        +int fk_estatus
+    }
+
+    %% Relaciones
+    Company "1" --> "N" Sucursal : tiene
+    Company "1" --> "N" Producto : posee
+    Company "1" --> "N" Cliente : registra
+    Company "1" --> "N" Pedido : recibe
+    Company "1" --> "N" PrecioVenta : define
+    Company "1" --> "N" LoteInventario : gestiona
+    Company "1" --> "N" Perfil : asigna
+
+    Sucursal "1" --> "N" LoteInventario : almacena
+    Sucursal "1" --> "N" PrecioVenta : aplica
+    Sucursal "1" --> "N" Pedido : atiende
+    Sucursal "1" --> "1" DeliveryConfigSucursal : configura
+
+    CatalogoProductos "1" --> "N" Producto : contiene
+    CatalogoProductos "1" --> "1" Categoria : pertenece
+    Categoria "1" --> "N" Categoria : subcategoria_de
+
+    Producto "1" --> "N" LoteInventario : tiene_lotes
+    Producto "1" --> "N" PrecioVenta : tiene_precios
+    Producto "1" --> "N" PedidoDetalle : aparece_en
+    Producto "1" --> "N" ClienteFavorito : es_favorito
+
+    LoteInventario "1" --> "N" HistorialInventario : genera
+    LoteInventario "1" --> "N" PedidoDetalle : se_descuenta
+
+    TipoMovimiento "1" --> "N" HistorialInventario : define
+
+    Moneda "1" --> "N" TasaCambio : origen
+    Moneda "1" --> "N" TasaCambio : destino
+    Moneda "1" --> "N" PrecioVenta : referencia
+    Moneda "1" --> "N" LoteInventario : referencia
+    Moneda "1" --> "N" PagoPedido : usada_en
+
+    Cliente "1" --> "N" Pedido : realiza
+    Cliente "1" --> "1" Usuario : autenticado_por
+
+    UsuarioCliente "1" --> "N" ClienteFavorito : guarda
+    UsuarioCliente "1" --> "N" Pedido : puede_realizar
+
+    Pedido "1" --> "N" PedidoDetalle : contiene
+    Pedido "1" --> "N" PagoPedido : tiene_pagos
+    Pedido "1" --> "1" DespachoDelivery : genera
+
+    Pais "1" --> "N" Region : tiene
+    Region "1" --> "N" Estado : tiene
+    Estado "1" --> "N" Ciudad : tiene
+    Estado "1" --> "N" Municipio : tiene
+    Municipio "1" --> "N" Parroquia : tiene
+    Parroquia "1" --> "N" Sector : tiene
+
+    DireccionSucursal "1" --> "1" Pais : pertenece
+    DireccionSucursal "1" --> "1" Region : pertenece
+    DireccionSucursal "1" --> "1" Estado : pertenece
+    DireccionSucursal "1" --> "1" Ciudad : pertenece
+    DireccionSucursal "1" --> "1" Municipio : pertenece
+    DireccionSucursal "1" --> "1" Parroquia : pertenece
+    DireccionSucursal "1" --> "1" Sector : pertenece
+
+    Sucursal "1" --> "1" DireccionSucursal : ubicada_en
+
+    MetodoPago "1" --> "N" PagoPedido : usado_en
+
+    Perfil "1" --> "N" Usuario : asigna
