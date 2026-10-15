@@ -1,8 +1,36 @@
+/**
+ * Dashboard.jsx — Página principal después del login. Contiene el layout de la app.
+ *
+ * EQUIVALENTE ANGULAR: Como un "layout.component.ts" que incluye:
+ * - Sidebar (menú lateral) → como un <app-sidebar> con @Input() menuItems
+ * - Top bar (barra superior) → como un <app-header>
+ * - Área de contenido → como un <router-outlet> donde se renderizan los módulos
+ *
+ * DIFERENCIA CON ANGULAR ROUTER:
+ * En Angular usarías Routes + RouterModule para navegar entre módulos.
+ * Aquí se usa un estado "activeModule" y renderizado condicional:
+ *   {activeModule === 'inventario' && <InventarioModule />}
+ * Es como tener un switch/case en vez de rutas definidas.
+ *
+ * PROPS recibidos del padre (App.jsx):
+ * - user: datos del usuario logueado (@Input en Angular)
+ * - onLogout: callback para cerrar sesión (@Output en Angular)
+ * - themeId: tema visual seleccionado (@Input)
+ * - onThemeChange: callback para cambiar tema (@Output)
+ */
+
 import { useState } from 'react'
 import InventarioModule from './modules/InventarioModule'
 import UsuariosModule from './modules/UsuariosModule'
 import CompanyModule from './modules/CompanyModule'
 
+/**
+ * MENU_ITEMS — Definición de los módulos del sistema.
+ * ANGULAR equivalente: Sería un array de rutas en app-routing.module.ts, o
+ * una constante en un servicio de navegación.
+ *
+ * Cada item tiene: id (para routing), icon (Bootstrap Icon), label, desc, color, badge
+ */
 const MENU_ITEMS = [
   {
     id: 'inventario', icon: 'bi-box-seam', label: 'Inventario',
@@ -12,7 +40,7 @@ const MENU_ITEMS = [
   {
     id: 'pedidos', icon: 'bi-cart', label: 'Pedidos',
     desc: 'Gestión de órdenes y seguimiento',
-    color: 'text-info', badge: '3',
+    color: 'text-info', badge: '3', // Badge muestra notificaciones pendientes
   },
   {
     id: 'delivery', icon: 'bi-truck', label: 'Delivery',
@@ -51,6 +79,10 @@ const MENU_ITEMS = [
   },
 ]
 
+/**
+ * STATS — Datos estáticos del dashboard (tarjetas de resumen).
+ * En producción estos vendrían de una API. Aquí están hardcoded como placeholder.
+ */
 const STATS = [
   { label: 'Productos activos',    value: '10',   icon: 'bi-box', color: 'text-primary' },
   { label: 'Pedidos pendientes',   value: '3',    icon: 'bi-cart-check', color: 'text-info' },
@@ -58,10 +90,33 @@ const STATS = [
   { label: 'Lotes por vencer',     value: '1',    icon: 'bi-exclamation-triangle-fill', color: 'text-warning' },
 ]
 
+/**
+ * Componente Dashboard — Layout principal con sidebar + contenido.
+ *
+ * Desestructuración de props:
+ * { user, onLogout, themeId, onThemeChange }
+ * ANGULAR equivalente:
+ *   @Input() user: any;
+ *   @Output() onLogout = new EventEmitter();
+ *   @Input() themeId: string;
+ *   @Output() onThemeChange = new EventEmitter<string>();
+ */
 export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
+  /**
+   * activeModule — Controla qué módulo se muestra en el área de contenido.
+   * null = muestra la vista de Dashboard (home).
+   * 'inventario' = muestra <InventarioModule />
+   * ANGULAR equivalente: Sería la ruta activa del Router.
+   */
   const [activeModule, setActiveModule] = useState(null)
+
+  /**
+   * sidebarOpen — Controla la visibilidad del sidebar en móvil.
+   * En desktop siempre está visible. En móvil se muestra/oculta con un botón hamburguesa.
+   */
   const [sidebarOpen, setSidebarOpen]   = useState(false)
 
+  // Saludo dinámico según la hora del día
   const now = new Date()
   const hora = now.getHours()
   const greeting = hora < 12 ? 'Buenos días' : hora < 18 ? 'Buenas tardes' : 'Buenas noches'
@@ -69,13 +124,20 @@ export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
   return (
     <div className="container-fluid p-0 d-flex align-items-stretch min-vh-100">
       
-      {/* ── Sidebar ── */}
+      {/* ══════════════════════════════════════════════════════════
+          SIDEBAR — Menú lateral de navegación
+          ANGULAR equivalente: <app-sidebar [menuItems]="menuItems" [activeRoute]="activeModule">
+          
+          Responsividad:
+          - Desktop (lg+): siempre visible con d-lg-flex
+          - Móvil: se muestra/oculta con sidebarOpen (d-block / d-none)
+          ══════════════════════════════════════════════════════════ */}
       <aside 
         className={`bg-dark border-end border-secondary border-opacity-10 sidebar flex-shrink-0 d-flex flex-column justify-content-between p-3 ${sidebarOpen ? 'd-block' : 'd-none d-lg-flex'}`}
         style={{ width: '270px', minHeight: '100vh', transition: 'all 0.3s' }}
       >
         <div>
-          {/* Logo */}
+          {/* Logo de la app */}
           <div className="d-flex align-items-center gap-2 mb-4 px-2 py-2">
             <div className="bg-primary rounded-3 p-2 d-inline-flex">
               <i className="bi bi-box-seam-fill text-white fs-4"></i>
@@ -83,7 +145,11 @@ export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
             <h4 className="mb-0 fw-extrabold text-light">Inventario<span className="text-primary">Pro</span></h4>
           </div>
 
-          {/* Navigation */}
+          {/*
+            Navegación — Lista de módulos con .map() (como *ngFor en Angular).
+            El [ngClass] de Angular aquí es className con template literals.
+            El (click) de Angular aquí es onClick.
+          */}
           <div className="sidebar-list list-group">
             <p className="text-secondary small font-monospace text-uppercase px-2 mb-2" style={{ letterSpacing: '0.8px' }}>Módulos</p>
             {MENU_ITEMS.map(item => (
@@ -94,6 +160,7 @@ export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
               >
                 <i className={`bi ${item.icon} ${item.color} fs-5`}></i>
                 <span className="flex-grow-1 small">{item.label}</span>
+                {/* Badge de notificación — solo se muestra si item.badge tiene valor */}
                 {item.badge && (
                   <span className="badge bg-danger rounded-pill px-2 py-1" style={{ fontSize: '0.65rem' }}>{item.badge}</span>
                 )}
@@ -102,9 +169,10 @@ export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
           </div>
         </div>
 
-        {/* Footer Profile */}
+        {/* Perfil del usuario en el footer del sidebar */}
         <div className="border-top border-secondary border-opacity-25 pt-3 d-flex align-items-center justify-content-between">
           <div className="d-flex align-items-center gap-2 overflow-hidden">
+            {/* Avatar con la primera letra del nombre */}
             <div className="bg-primary bg-gradient rounded-3 text-white fw-bold d-flex align-items-center justify-content-center" style={{ width: '38px', height: '38px' }}>
               {user.nombre.charAt(0).toUpperCase()}
             </div>
@@ -113,13 +181,14 @@ export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
               <span className="text-muted" style={{ fontSize: '0.72rem' }}>{user.correo}</span>
             </div>
           </div>
+          {/* Botón de logout en el sidebar */}
           <button className="btn btn-outline-danger border-0 p-2" onClick={onLogout} title="Cerrar sesión">
             <i className="bi bi-box-arrow-right fs-5"></i>
           </button>
         </div>
       </aside>
 
-      {/* Mobile Toggle Button for Sidebar */}
+      {/* Overlay oscuro para cerrar sidebar en móvil (como un backdrop de modal) */}
       {sidebarOpen && (
         <div 
           className="position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-50 z-2 d-lg-none"
@@ -127,14 +196,17 @@ export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
         />
       )}
 
-      {/* ── Main content ── */}
+      {/* ══════════════════════════════════════════════════════════
+          CONTENIDO PRINCIPAL — Equivalente a <router-outlet> en Angular
+          ══════════════════════════════════════════════════════════ */}
       <main className="flex-grow-1 d-flex flex-column bg-transparent">
         
-        {/* Top bar */}
+        {/* ── Top Bar / Header ── */}
         <header className="navbar navbar-expand navbar-dark bg-dark bg-gradient bg-opacity-75 border-bottom border-secondary border-opacity-10 px-4 py-3 position-sticky top-0 z-3" style={{ height: '70px' }}>
           <div className="container-fluid p-0 d-flex justify-content-between align-items-center">
             
             <div className="d-flex align-items-center gap-3">
+              {/* Botón hamburguesa — solo visible en móvil (d-lg-none) */}
               <button 
                 className="btn btn-outline-secondary d-lg-none border-0 p-1"
                 onClick={() => setSidebarOpen(v => !v)}
@@ -142,6 +214,11 @@ export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
                 <i className="bi bi-list fs-4"></i>
               </button>
               
+              {/* Título dinámico — muestra el nombre del módulo activo o "Dashboard" */}
+              {/*
+                ANGULAR: {{ activeModule ? getModuleLabel(activeModule) : 'Dashboard' }}
+                REACT: Usa el operador ?. (optional chaining) y find() para buscar el label
+              */}
               <h5 className="mb-0 fw-bold text-light">
                 {activeModule
                   ? MENU_ITEMS.find(m => m.id === activeModule)?.label
@@ -150,6 +227,7 @@ export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
             </div>
 
             <div className="d-flex align-items-center gap-4">
+              {/* Fecha actual en formato largo español */}
               <span className="text-secondary small d-none d-md-inline-block">
                 {now.toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' })}
               </span>
@@ -157,7 +235,10 @@ export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
               <div className="d-flex align-items-center gap-3">
                 <span className="text-light small fw-medium">{user.nombre}</span>
 
-                {/* Theme Customizer Dropdown */}
+                {/*
+                  Dropdown de temas — Usa Bootstrap 5 JS nativo (data-bs-toggle="dropdown").
+                  ANGULAR equivalente: Un <mat-menu> o un componente dropdown custom.
+                */}
                 <div className="dropdown">
                   <button 
                     className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2 dropdown-toggle px-3" 
@@ -173,7 +254,7 @@ export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
                   <ul className="dropdown-menu dropdown-menu-end glass-card p-3 shadow-lg border border-secondary border-opacity-25" aria-labelledby="themeDropdown" style={{ minWidth: '240px' }}>
                     <li className="dropdown-header text-secondary small-monospace text-uppercase p-0 mb-3" style={{ letterSpacing: '0.8px' }}>Temas Preestablecidos</li>
                     
-                    {/* Preset Themes List */}
+                    {/* Lista de temas con .map() */}
                     <div className="d-flex flex-column gap-2">
                       {[
                         { id: 'violet', name: 'Violeta Cósmico', color: '#8b5cf6' },
@@ -205,13 +286,21 @@ export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
           </div>
         </header>
 
-        {/* ── View Area ── */}
+        {/* ══════════════════════════════════════════════════════════
+            ÁREA DE VISTA — Donde se renderizan los módulos
+            ANGULAR equivalente: <router-outlet></router-outlet>
+            
+            Aquí se usa renderizado condicional en vez de rutas:
+            - !activeModule → muestra el Home/Dashboard
+            - activeModule === 'inventario' → muestra <InventarioModule />
+            - etc.
+            ══════════════════════════════════════════════════════════ */}
         <div className="container-fluid p-4" style={{ maxWidth: '1300px' }}>
           
-          {/* Dashboard Home View */}
+          {/* ── Vista Home del Dashboard (cuando no hay módulo activo) ── */}
           {!activeModule && (
             <div className="fade-in-up">
-              {/* Greeting */}
+              {/* Saludo personalizado */}
               <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <div>
                   <h2 className="fw-extrabold text-light mb-1">{greeting}, {user.nombre} 👋</h2>
@@ -223,7 +312,7 @@ export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
                 </div>
               </div>
 
-              {/* Stats */}
+              {/* Tarjetas de estadísticas rápidas */}
               <div className="row g-3 mb-4">
                 {STATS.map((s, idx) => (
                   <div key={idx} className="col-12 col-sm-6 col-md-3">
@@ -240,7 +329,7 @@ export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
                 ))}
               </div>
 
-              {/* Quick links to system modules */}
+              {/* Grid de acceso rápido a módulos — tarjetas clickeables */}
               <div className="mb-3">
                 <h6 className="text-secondary text-uppercase small font-monospace" style={{ letterSpacing: '0.8px' }}>Módulos del sistema</h6>
               </div>
@@ -270,18 +359,30 @@ export default function Dashboard({ user, onLogout, themeId, onThemeChange }) {
             </div>
           )}
 
-          {/* Active Module View */}
+          {/*
+            ── Renderizado de Módulo Activo ──
+            ANGULAR equivalente: <router-outlet> muestra el componente de la ruta activa.
+            REACT: Renderizado condicional con && (short-circuit evaluation).
+            
+            Cada línea es como una ruta en Angular:
+              { path: 'inventario', component: InventarioModule }
+              { path: 'usuarios', component: UsuariosModule }
+              { path: 'config', component: CompanyModule }
+          */}
           {activeModule && (
             <div className="fade-in-up">
+              {/* Botón "Volver al Dashboard" — como un breadcrumb o botón back */}
               <button className="btn btn-sm btn-outline-secondary mb-4 gap-2 d-inline-flex align-items-center" onClick={() => setActiveModule(null)}>
                 <i className="bi bi-arrow-left"></i>
                 Volver al Dashboard
               </button>
 
+              {/* Renderiza el módulo correspondiente */}
               {activeModule === 'inventario' && <InventarioModule />}
               {activeModule === 'usuarios' && <UsuariosModule />}
               {activeModule === 'config' && <CompanyModule />}
               
+              {/* Módulos que aún no están implementados — muestra placeholder */}
               {!['inventario', 'usuarios', 'config'].includes(activeModule) && (
                 <div className="card glass-card text-center py-5">
                   <div className="card-body">

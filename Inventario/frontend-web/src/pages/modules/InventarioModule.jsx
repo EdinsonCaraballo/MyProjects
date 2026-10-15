@@ -1,55 +1,88 @@
+/**
+ * InventarioModule.jsx — Módulo CRUD de Inventario (Productos + Lotes).
+ *
+ * EQUIVALENTE ANGULAR: inventario.module.ts + inventario.component.ts + template
+ *
+ * Este módulo sigue el MISMO patrón que CompanyModule.jsx:
+ * 1. Estados para datos, loading, error, formularios, modal
+ * 2. fetchData() en useEffect (como ngOnInit)
+ * 3. Handlers para abrir modal (crear/editar), submit, delete
+ * 4. Configuración de columnas para DataTable
+ * 5. JSX con tabs, DataTable y modal
+ *
+ * DIFERENCIA CLAVE: Tiene MÁS datos relacionados (catálogos, monedas, sucursales, compañías)
+ * que se cargan en paralelo con Promise.all (como forkJoin en RxJS/Angular).
+ */
+
 import { useState, useEffect } from 'react'
 import DataTable from '../../components/DataTable'
 
 export default function InventarioModule() {
-  const [products, setProducts] = useState([])
-  const [lots, setLots] = useState([])
-  const [companies, setCompanies] = useState([])
-  const [branches, setBranches] = useState([])
-  const [catalogs, setCatalogs] = useState([])
-  const [currencies, setCurrencies] = useState([])
+  // ══════════════════════════════════════════════════════════
+  // ESTADOS — Datos del backend
+  // Angular: serían propiedades de clase + BehaviorSubjects en servicios
+  // ══════════════════════════════════════════════════════════
+  const [products, setProducts] = useState([])      // Lista de productos
+  const [lots, setLots] = useState([])              // Lista de lotes
+  const [companies, setCompanies] = useState([])    // Para selects de FK
+  const [branches, setBranches] = useState([])      // Para selects de FK
+  const [catalogs, setCatalogs] = useState([])      // Catálogo de productos (nombres)
+  const [currencies, setCurrencies] = useState([])  // Monedas disponibles
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const [activeTab, setActiveTab] = useState('products') // 'products' or 'lots'
+  // ── Control de UI ──
+  const [activeTab, setActiveTab] = useState('products') // 'products' | 'lots'
   const [showModal, setShowModal] = useState(false)
-  const [modalType, setModalType] = useState('product') // 'product' or 'lot'
+  const [modalType, setModalType] = useState('product')  // 'product' | 'lot'
   const [isEditing, setIsEditing] = useState(false)
   const [currentId, setCurrentId] = useState(null)
 
-  // Forms states
+  // ══════════════════════════════════════════════════════════
+  // FORMULARIOS — Como FormGroup de Angular Reactive Forms
+  // Cada campo se actualiza con spread: setForm({...form, campo: valor})
+  // Equivale a: this.form.patchValue({ campo: valor })
+  // ══════════════════════════════════════════════════════════
   const [productForm, setProductForm] = useState({
     codigo_barras: '',
     codigo_inventario: '',
-    fk_catalogo_productos: '',
-    vence: false,
+    fk_catalogo_productos: '',     // FK al catálogo de productos
+    vence: false,                  // ¿El producto tiene fecha de vencimiento?
     stock_minimo: 0,
     stock_maximo: '',
-    fk_estatus: '1',
-    fk_compania: '',
+    fk_estatus: '1',               // 1 = Activo
+    fk_compania: '',               // FK a la compañía dueña
   })
 
   const [lotForm, setLotForm] = useState({
-    fk_sucursal: '',
-    fk_productos: '',
-    numero_lote: '',
-    cantidad_inicial: 0,
-    cantidad_actual: 0,
-    fk_moneda: '',
-    precio_compra: 0,
+    fk_sucursal: '',               // FK a la sucursal donde está el lote
+    fk_productos: '',              // FK al producto
+    numero_lote: '',               // Identificador del lote
+    cantidad_inicial: 0,           // Cantidad original comprada
+    cantidad_actual: 0,            // Cantidad disponible actualmente
+    fk_moneda: '',                 // FK a la moneda (USD, BsD, etc.)
+    precio_compra: 0,              // Precio de compra unitario
     fecha_produccion: '',
     fecha_vencimiento: '',
     fk_estatus: '1',
     fk_compania: '',
   })
 
+  // ── API Config ──
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765'
 
+  /** Headers con JWT — En Angular usarías un HttpInterceptor */
   const getHeaders = () => ({
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${localStorage.getItem('inv_token')}`
   })
 
+  /**
+   * fetchData — Carga TODOS los datos necesarios en paralelo.
+   * Promise.all = forkJoin de RxJS en Angular.
+   * Las APIs auxiliares (companies, branches, catalogs, currencies) se usan para
+   * poblar los <select> de los formularios (como cargar datos para dropdowns).
+   */
   const fetchData = async () => {
     setLoading(true)
     setError('')
@@ -67,6 +100,7 @@ export default function InventarioModule() {
 
       const dataP = await resP.json()
       const dataL = await resL.json()
+      // Las APIs auxiliares pueden fallar sin bloquear — se manejan con fallback vacío
       const dataComp = resComp.ok ? await resComp.json() : []
       const dataBranch = resBranch.ok ? await resBranch.json() : []
       const dataCat = resCat.ok ? await resCat.json() : []
@@ -85,9 +119,15 @@ export default function InventarioModule() {
     }
   }
 
+  /** ngOnInit equivalente — carga datos al montar el componente */
   useEffect(() => {
     fetchData()
   }, [])
+
+  // ══════════════════════════════════════════════════════════
+  // HANDLERS DE MODAL — Abrir para crear/editar
+  // Mismo patrón que CompanyModule (ver comentarios allá)
+  // ══════════════════════════════════════════════════════════
 
   const handleOpenProductModal = (product = null) => {
     setModalType('product')
@@ -159,6 +199,11 @@ export default function InventarioModule() {
     setShowModal(true)
   }
 
+  // ══════════════════════════════════════════════════════════
+  // HANDLERS DE SUBMIT — POST (crear) o PUT (actualizar)
+  // Mismo patrón que CompanyModule
+  // ══════════════════════════════════════════════════════════
+
   const handleProductSubmit = async (e) => {
     e.preventDefault()
     const method = isEditing ? 'PUT' : 'POST'
@@ -212,7 +257,10 @@ export default function InventarioModule() {
     }
   }
 
-  // DataTables Columns Config
+  // ══════════════════════════════════════════════════════════
+  // COLUMNAS DE DATATABLE
+  // ══════════════════════════════════════════════════════════
+
   const productColumns = [
     { key: 'codigo_inventario', label: 'SKU / Código', sortable: true, render: (p) => <strong>{p.codigo_inventario}</strong> },
     { key: 'codigo_barras', label: 'Código de Barras', sortable: true },
@@ -222,6 +270,7 @@ export default function InventarioModule() {
       key: 'stock_minimo',
       label: 'Stock Mín / Máx',
       sortable: true,
+      /** render personalizado — muestra "min / max" con ∞ si no hay máximo */
       render: (p) => `${p.stock_minimo} / ${p.stock_maximo || '∞'}`
     },
     {
@@ -271,6 +320,7 @@ export default function InventarioModule() {
       key: 'fecha_vencimiento',
       label: 'Vence',
       sortable: true,
+      /** Lógica de render: si la fecha ya pasó, muestra en rojo con ⚠️ */
       render: (l) => {
         if (!l.fecha_vencimiento) return '-'
         const expired = new Date(l.fecha_vencimiento) < new Date()
@@ -298,9 +348,12 @@ export default function InventarioModule() {
     }
   ]
 
+  // ══════════════════════════════════════════════════════════
+  // JSX — Template
+  // ══════════════════════════════════════════════════════════
   return (
     <div className="fade-in-up">
-      {/* Tabs Selector */}
+      {/* Tabs: Productos / Lotes */}
       <div className="card glass-card mb-4 border border-secondary border-opacity-10">
         <div className="card-body p-2 d-flex gap-2">
           <button
@@ -333,7 +386,6 @@ export default function InventarioModule() {
         </div>
       ) : (
         <div>
-          {/* Header Row */}
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h5 className="fw-bold text-white mb-0">
               {activeTab === 'products' ? 'Inventario de Productos' : 'Control de Lotes y Vencimientos'}
@@ -347,24 +399,17 @@ export default function InventarioModule() {
             </button>
           </div>
 
-          {/* DataTable component */}
           {activeTab === 'products' ? (
-            <DataTable
-              data={products}
-              columns={productColumns}
-              searchPlaceholder="Buscar producto por SKU, nombre, código..."
-            />
+            <DataTable data={products} columns={productColumns}
+              searchPlaceholder="Buscar producto por SKU, nombre, código..." />
           ) : (
-            <DataTable
-              data={lots}
-              columns={lotColumns}
-              searchPlaceholder="Buscar lote por número, sucursal, producto..."
-            />
+            <DataTable data={lots} columns={lotColumns}
+              searchPlaceholder="Buscar lote por número, sucursal, producto..." />
           )}
         </div>
       )}
 
-      {/* Modal Dialog */}
+      {/* ── Modal de Producto/Lote ── */}
       {showModal && (
         <div className="modal d-block show" tabIndex="-1" role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
           <div className="modal-dialog modal-dialog-centered" role="document">
@@ -379,10 +424,10 @@ export default function InventarioModule() {
               {modalType === 'product' ? (
                 <form onSubmit={handleProductSubmit}>
                   <div className="modal-body p-4 d-flex flex-column gap-3">
+                    {/* Select de catálogo — poblado con datos del backend */}
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Definición del Producto (Catálogo) *</label>
-                      <select
-                        className="form-select"
+                      <select className="form-select"
                         value={productForm.fk_catalogo_productos}
                         onChange={e => setProductForm({...productForm, fk_catalogo_productos: e.target.value})}
                         required
@@ -394,8 +439,7 @@ export default function InventarioModule() {
                     </div>
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Compañía *</label>
-                      <select
-                        className="form-select"
+                      <select className="form-select"
                         value={productForm.fk_compania}
                         onChange={e => setProductForm({...productForm, fk_compania: e.target.value})}
                         required
@@ -407,56 +451,37 @@ export default function InventarioModule() {
                     </div>
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Código SKU (Inventario) *</label>
-                      <input
-                        type="text"
-                        className="form-control"
+                      <input type="text" className="form-control"
                         value={productForm.codigo_inventario}
                         onChange={e => setProductForm({...productForm, codigo_inventario: e.target.value})}
-                        required
-                      />
+                        required />
                     </div>
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Código de Barras</label>
-                      <input
-                        type="text"
-                        className="form-control"
+                      <input type="text" className="form-control"
                         value={productForm.codigo_barras}
-                        onChange={e => setProductForm({...productForm, codigo_barras: e.target.value})}
-                      />
+                        onChange={e => setProductForm({...productForm, codigo_barras: e.target.value})} />
                     </div>
-
+                    {/* Switch de vencimiento */}
                     <div className="form-check form-switch my-2">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        role="switch"
-                        id="venceCheck"
+                      <input className="form-check-input" type="checkbox" role="switch" id="venceCheck"
                         checked={productForm.vence}
-                        onChange={e => setProductForm({...productForm, vence: e.target.checked})}
-                      />
+                        onChange={e => setProductForm({...productForm, vence: e.target.checked})} />
                       <label className="form-check-label text-secondary small fw-semibold" htmlFor="venceCheck">¿Tiene fecha de vencimiento?</label>
                     </div>
-
+                    {/* Stock mínimo y máximo en fila */}
                     <div className="row g-2">
                       <div className="col-6">
                         <label className="form-label text-secondary small fw-semibold">Stock Mínimo</label>
-                        <input
-                          type="number"
-                          step="0.0001"
-                          className="form-control"
+                        <input type="number" step="0.0001" className="form-control"
                           value={productForm.stock_minimo}
-                          onChange={e => setProductForm({...productForm, stock_minimo: parseFloat(e.target.value) || 0})}
-                        />
+                          onChange={e => setProductForm({...productForm, stock_minimo: parseFloat(e.target.value) || 0})} />
                       </div>
                       <div className="col-6">
                         <label className="form-label text-secondary small fw-semibold">Stock Máximo</label>
-                        <input
-                          type="number"
-                          step="0.0001"
-                          className="form-control"
+                        <input type="number" step="0.0001" className="form-control"
                           value={productForm.stock_maximo}
-                          onChange={e => setProductForm({...productForm, stock_maximo: e.target.value})}
-                        />
+                          onChange={e => setProductForm({...productForm, stock_maximo: e.target.value})} />
                       </div>
                     </div>
                   </div>
@@ -470,12 +495,8 @@ export default function InventarioModule() {
                   <div className="modal-body p-4 d-flex flex-column gap-3">
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Producto *</label>
-                      <select
-                        className="form-select"
-                        value={lotForm.fk_productos}
-                        onChange={e => setLotForm({...lotForm, fk_productos: e.target.value})}
-                        required
-                      >
+                      <select className="form-select" value={lotForm.fk_productos}
+                        onChange={e => setLotForm({...lotForm, fk_productos: e.target.value})} required>
                         {products.map(p => (
                           <option key={p.id} value={p.id}>{p.catalogo_nombre || p.codigo_inventario}</option>
                         ))}
@@ -483,12 +504,8 @@ export default function InventarioModule() {
                     </div>
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Sucursal *</label>
-                      <select
-                        className="form-select"
-                        value={lotForm.fk_sucursal}
-                        onChange={e => setLotForm({...lotForm, fk_sucursal: e.target.value})}
-                        required
-                      >
+                      <select className="form-select" value={lotForm.fk_sucursal}
+                        onChange={e => setLotForm({...lotForm, fk_sucursal: e.target.value})} required>
                         {branches.map(b => (
                           <option key={b.id} value={b.id}>{b.nombre_sucursal}</option>
                         ))}
@@ -496,12 +513,8 @@ export default function InventarioModule() {
                     </div>
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Compañía *</label>
-                      <select
-                        className="form-select"
-                        value={lotForm.fk_compania}
-                        onChange={e => setLotForm({...lotForm, fk_compania: e.target.value})}
-                        required
-                      >
+                      <select className="form-select" value={lotForm.fk_compania}
+                        onChange={e => setLotForm({...lotForm, fk_compania: e.target.value})} required>
                         {companies.map(c => (
                           <option key={c.id} value={c.id}>{c.name_razon_social}</option>
                         ))}
@@ -509,49 +522,28 @@ export default function InventarioModule() {
                     </div>
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Número de Lote *</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={lotForm.numero_lote}
-                        onChange={e => setLotForm({...lotForm, numero_lote: e.target.value})}
-                        required
-                      />
+                      <input type="text" className="form-control" value={lotForm.numero_lote}
+                        onChange={e => setLotForm({...lotForm, numero_lote: e.target.value})} required />
                     </div>
-
                     <div className="row g-2">
                       <div className="col-6">
                         <label className="form-label text-secondary small fw-semibold">Cantidad Inicial *</label>
-                        <input
-                          type="number"
-                          step="0.0001"
-                          className="form-control"
+                        <input type="number" step="0.0001" className="form-control"
                           value={lotForm.cantidad_inicial}
-                          onChange={e => setLotForm({...lotForm, cantidad_inicial: parseFloat(e.target.value) || 0})}
-                          required
-                        />
+                          onChange={e => setLotForm({...lotForm, cantidad_inicial: parseFloat(e.target.value) || 0})} required />
                       </div>
                       <div className="col-6">
                         <label className="form-label text-secondary small fw-semibold">Cantidad Actual *</label>
-                        <input
-                          type="number"
-                          step="0.0001"
-                          className="form-control"
+                        <input type="number" step="0.0001" className="form-control"
                           value={lotForm.cantidad_actual}
-                          onChange={e => setLotForm({...lotForm, cantidad_actual: parseFloat(e.target.value) || 0})}
-                          required
-                        />
+                          onChange={e => setLotForm({...lotForm, cantidad_actual: parseFloat(e.target.value) || 0})} required />
                       </div>
                     </div>
-
                     <div className="row g-2">
                       <div className="col-5">
                         <label className="form-label text-secondary small fw-semibold">Moneda *</label>
-                        <select
-                          className="form-select"
-                          value={lotForm.fk_moneda}
-                          onChange={e => setLotForm({...lotForm, fk_moneda: e.target.value})}
-                          required
-                        >
+                        <select className="form-select" value={lotForm.fk_moneda}
+                          onChange={e => setLotForm({...lotForm, fk_moneda: e.target.value})} required>
                           {currencies.map(curr => (
                             <option key={curr.id} value={curr.id}>{curr.simbolo}</option>
                           ))}
@@ -559,34 +551,21 @@ export default function InventarioModule() {
                       </div>
                       <div className="col-7">
                         <label className="form-label text-secondary small fw-semibold">Precio Compra</label>
-                        <input
-                          type="number"
-                          step="0.0001"
-                          className="form-control"
+                        <input type="number" step="0.0001" className="form-control"
                           value={lotForm.precio_compra}
-                          onChange={e => setLotForm({...lotForm, precio_compra: parseFloat(e.target.value) || 0})}
-                        />
+                          onChange={e => setLotForm({...lotForm, precio_compra: parseFloat(e.target.value) || 0})} />
                       </div>
                     </div>
-
                     <div className="row g-2">
                       <div className="col-6">
                         <label className="form-label text-secondary small fw-semibold">Fecha Producción</label>
-                        <input
-                          type="date"
-                          className="form-control"
-                          value={lotForm.fecha_produccion}
-                          onChange={e => setLotForm({...lotForm, fecha_produccion: e.target.value})}
-                        />
+                        <input type="date" className="form-control" value={lotForm.fecha_produccion}
+                          onChange={e => setLotForm({...lotForm, fecha_produccion: e.target.value})} />
                       </div>
                       <div className="col-6">
                         <label className="form-label text-secondary small fw-semibold">Fecha Vencimiento</label>
-                        <input
-                          type="date"
-                          className="form-control"
-                          value={lotForm.fecha_vencimiento}
-                          onChange={e => setLotForm({...lotForm, fecha_vencimiento: e.target.value})}
-                        />
+                        <input type="date" className="form-control" value={lotForm.fecha_vencimiento}
+                          onChange={e => setLotForm({...lotForm, fecha_vencimiento: e.target.value})} />
                       </div>
                     </div>
                   </div>

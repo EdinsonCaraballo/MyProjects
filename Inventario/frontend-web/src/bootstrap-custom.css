@@ -1,32 +1,59 @@
-/* ── Custom Theme and Overrides on top of Bootstrap 5 ── */
+/* ══════════════════════════════════════════════════════════════
+   bootstrap-custom.css — Sobrescrituras (overrides) de Bootstrap 5
+   
+   EQUIVALENTE ANGULAR: En Angular se suele sobrescribir Bootstrap en
+   el archivo styles.scss global o en un archivo _bootstrap-overrides.scss.
+   
+   PROPÓSITO: Bootstrap viene con estilos por defecto (colores azules, 
+   fondos blancos, etc.). Este archivo los sobrescribe para que se 
+   adapten al tema oscuro con glassmorphism de la app.
+   
+   Los !important son necesarios porque Bootstrap usa especificidad alta
+   en sus reglas y necesitamos forzar nuestros estilos por encima.
+   ══════════════════════════════════════════════════════════════ */
 
+/* ── Variables CSS personalizadas del tema ──
+   Estas variables se SOBRESCRIBEN dinámicamente desde App.jsx
+   cuando el usuario cambia de tema (ej: violeta → esmeralda).
+   En App.jsx: document.documentElement.style.setProperty('--purple-accent', color)
+*/
 :root {
-  --purple-accent: #8b5cf6;
-  --purple-glow: rgba(139, 92, 246, 0.15);
-  --glass-bg: rgba(18, 20, 38, 0.55);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-blur: blur(25px);
-  --body-bg: radial-gradient(circle at top right, #1a153b 0%, #0d0e1b 100%);
+  --purple-accent: #8b5cf6;                    /* Color primario del tema activo */
+  --purple-glow: rgba(139, 92, 246, 0.15);     /* Glow/brillo suave del color primario */
+  --glass-bg: rgba(18, 20, 38, 0.55);          /* Fondo del glassmorphism */
+  --glass-border: rgba(255, 255, 255, 0.08);   /* Borde sutil del glass */
+  --glass-blur: blur(25px);                    /* Intensidad del blur del glass */
+  --body-bg: radial-gradient(circle at top right, #1a153b 0%, #0d0e1b 100%); /* Gradiente del body */
 }
 
+/* ── Body — Fondo oscuro con gradiente ── */
 body {
   background: var(--body-bg) !important;
   min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: #f3f4f6 !important;
+  color: #f3f4f6 !important;  /* Texto claro sobre fondo oscuro */
 }
 
-/* Glassmorphism Cards */
+/* ── Glassmorphism Cards ──
+   Efecto de vidrio esmerilado (glassmorphism):
+   - Fondo semi-transparente
+   - backdrop-filter: blur() para difuminar lo que hay detrás
+   - Borde sutil y sombra profunda
+   Usado en: login card, dashboard cards, modales, tabs
+*/
 .glass-card {
   background: var(--glass-bg) !important;
   backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);  /* Safari compatibility */
   border: 1px solid var(--glass-border) !important;
   border-radius: 16px !important;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
 }
 
-/* Glass Inputs & Selects */
+/* ── Inputs y Selects — Tema oscuro ──
+   Sobrescribe los inputs de Bootstrap para que tengan fondo oscuro
+   semi-transparente con blur, en vez del fondo blanco por defecto.
+*/
 .form-control, .form-select {
   background-color: rgba(20, 22, 43, 0.6) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
@@ -34,17 +61,22 @@ body {
   backdrop-filter: blur(10px);
 }
 
+/* Estado focus de inputs — borde violeta con anillo de foco */
 .form-control:focus, .form-select:focus {
   border-color: var(--purple-accent) !important;
   box-shadow: 0 0 0 0.25rem rgba(139, 92, 246, 0.25) !important;
   background-color: rgba(20, 22, 43, 0.8) !important;
 }
 
+/* Placeholder de inputs — texto gris suave */
 .form-control::placeholder {
   color: rgba(255, 255, 255, 0.4) !important;
 }
 
-/* Sidebar Styling */
+/* ── Sidebar — Menú lateral de navegación ──
+   Estiliza los items del menú del sidebar (Dashboard.jsx).
+   Cada item es un <button> con clase list-group-item.
+*/
 .sidebar-list .list-group-item {
   background: transparent !important;
   border: none !important;
@@ -56,11 +88,13 @@ body {
   transition: all 0.2s ease-in-out;
 }
 
+/* Hover: fondo sutil al pasar el mouse */
 .sidebar-list .list-group-item:hover {
   background: rgba(255, 255, 255, 0.05) !important;
   color: #fff;
 }
 
+/* Activo: borde izquierdo violeta (indicador de selección) */
 .sidebar-list .list-group-item.active {
   background: rgba(139, 92, 246, 0.15) !important;
   color: #fff;
@@ -68,7 +102,10 @@ body {
   border-radius: 0 8px 8px 0 !important;
 }
 
-/* Custom Button */
+/* ── Botón Primario — Override de Bootstrap ──
+   Cambia el azul por defecto de Bootstrap por el color del tema.
+   Añade sombra glow y efecto de elevación al hover.
+*/
 .btn-primary {
   background-color: var(--purple-accent) !important;
   border-color: var(--purple-accent) !important;
@@ -78,10 +115,11 @@ body {
 }
 
 .btn-primary:hover {
-  transform: translateY(-1px);
+  transform: translateY(-1px);  /* Micro-animación de elevación */
   box-shadow: 0 6px 20px rgba(139, 92, 246, 0.45) !important;
 }
 
+/* ── Botón Outline Secondary — Borde sutil ── */
 .btn-outline-secondary {
   border-color: rgba(255, 255, 255, 0.15) !important;
   color: rgba(255, 255, 255, 0.8) !important;
@@ -92,9 +130,9 @@ body {
   color: #fff !important;
 }
 
-/* Modal Overlay Blur */
+/* ── Modal — Fondo con blur y estilo oscuro ── */
 .modal {
-  backdrop-filter: blur(10px) !important;
+  backdrop-filter: blur(10px) !important;  /* Difumina el fondo detrás del modal */
 }
 
 .modal-content {
@@ -104,7 +142,11 @@ body {
   border-radius: 16px !important;
 }
 
-/* Layout Anims */
+/* ── Animación Fade In Up ──
+   Se usa en las clases .fade-in-up de los componentes.
+   Los elementos aparecen deslizándose desde abajo con fade.
+   cubic-bezier(0.16, 1, 0.3, 1) = curva de ease-out pronunciada (rápido al inicio).
+*/
 .fade-in-up {
   animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -120,11 +162,12 @@ body {
   }
 }
 
-/* Table Hover accent */
+/* ── Hover de tabla — Fondo sutil al pasar mouse sobre filas ── */
 .table-hover tbody tr:hover {
   background-color: rgba(255, 255, 255, 0.03) !important;
 }
 
+/* ── Utilidad: cursor pointer ── */
 .cursor-pointer {
   cursor: pointer;
 }

@@ -1,30 +1,57 @@
+/**
+ * UsuariosModule.jsx — Módulo CRUD de Usuarios, Perfiles y Módulos del sistema.
+ *
+ * EQUIVALENTE ANGULAR: usuarios.module.ts + usuarios.component.ts + template
+ *
+ * Este componente maneja 3 entidades con TABS:
+ * 1. Usuarios — Cuentas de acceso al sistema (nombre, correo, documento, contraseña)
+ * 2. Perfiles — Roles de acceso asociados a compañía/sucursal
+ * 3. Módulos — Secciones del sistema que se pueden habilitar/deshabilitar
+ *
+ * SIGUE EL MISMO PATRÓN QUE CompanyModule e InventarioModule:
+ * - Estados con useState para datos, UI, formularios
+ * - fetchData() en useEffect (ngOnInit)
+ * - Handlers de modal: open, submit, delete
+ * - Configuración de columnas para DataTable
+ * - JSX con tabs, DataTable y modal condicional
+ *
+ * NOTA SOBRE CONTRASEÑAS:
+ * En modo edición, el campo password es OPCIONAL. Si se deja vacío, el backend
+ * no cambia la contraseña. Esto se maneja eliminando el campo del body antes de enviar:
+ *   if (!bodyData.password) delete bodyData.password;
+ */
+
 import { useState, useEffect } from 'react'
 import DataTable from '../../components/DataTable'
 
 export default function UsuariosModule() {
+  // ══════════════════════════════════════════════════════════
+  // ESTADOS
+  // ══════════════════════════════════════════════════════════
   const [users, setUsers] = useState([])
   const [profiles, setProfiles] = useState([])
   const [modules, setModules] = useState([])
-  const [companies, setCompanies] = useState([])
-  const [branches, setBranches] = useState([])
+  const [companies, setCompanies] = useState([])    // Para selects FK en perfiles
+  const [branches, setBranches] = useState([])      // Para selects FK en perfiles
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const [activeTab, setActiveTab] = useState('users') // 'users', 'profiles', or 'modules'
+  // Control de UI
+  const [activeTab, setActiveTab] = useState('users')  // 'users' | 'profiles' | 'modules'
   const [showModal, setShowModal] = useState(false)
-  const [modalType, setModalType] = useState('user') // 'user', 'profile', or 'module'
+  const [modalType, setModalType] = useState('user')   // 'user' | 'profile' | 'module'
   const [isEditing, setIsEditing] = useState(false)
   const [currentId, setCurrentId] = useState(null)
 
-  // Forms states
+  // ── Formularios ──
   const [userForm, setUserForm] = useState({
     nombre: '',
     correo: '',
     numero_documento: '',
-    tipo_documento: 'V',
+    tipo_documento: 'V',     // V=Venezolano, E=Extranjero, J=Jurídico, G=Gobierno
     telefono: '',
     password: '',
-    fk_estatus: '1',
+    fk_estatus: '1',         // 1=Activo, 2=Inactivo
   })
 
   const [profileForm, setProfileForm] = useState({
@@ -39,6 +66,7 @@ export default function UsuariosModule() {
     fk_estatus: '1',
   })
 
+  // ── API Config ──
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765'
 
   const getHeaders = () => ({
@@ -46,6 +74,9 @@ export default function UsuariosModule() {
     'Authorization': `Bearer ${localStorage.getItem('inv_token')}`
   })
 
+  /**
+   * fetchData — Carga usuarios, perfiles, módulos, compañías y sucursales en paralelo.
+   */
   const fetchData = async () => {
     setLoading(true)
     setError('')
@@ -78,9 +109,14 @@ export default function UsuariosModule() {
     }
   }
 
+  /** ngOnInit equivalente */
   useEffect(() => {
     fetchData()
   }, [])
+
+  // ══════════════════════════════════════════════════════════
+  // HANDLERS DE MODAL
+  // ══════════════════════════════════════════════════════════
 
   const handleOpenUserModal = (user = null) => {
     setModalType('user')
@@ -93,7 +129,7 @@ export default function UsuariosModule() {
         numero_documento: user.numero_documento || '',
         tipo_documento: user.tipo_documento || 'V',
         telefono: user.telefono || '',
-        password: '',
+        password: '',    // Vacío: no cambia la contraseña a menos que se escriba una nueva
         fk_estatus: user.fk_estatus ? String(user.fk_estatus) : '1',
       })
     } else {
@@ -156,11 +192,20 @@ export default function UsuariosModule() {
     setShowModal(true)
   }
 
+  // ══════════════════════════════════════════════════════════
+  // HANDLERS DE SUBMIT
+  // ══════════════════════════════════════════════════════════
+
   const handleUserSubmit = async (e) => {
     e.preventDefault()
     const method = isEditing ? 'PUT' : 'POST'
     const url = isEditing ? `${API_URL}/api/usuarios/${currentId}/` : `${API_URL}/api/usuarios/`
 
+    /**
+     * Manejo especial de contraseña:
+     * Si el campo password está vacío en modo edición, lo eliminamos del body
+     * para que el backend no cambie la contraseña existente.
+     */
     const bodyData = { ...userForm }
     if (!bodyData.password) {
       delete bodyData.password
@@ -234,7 +279,10 @@ export default function UsuariosModule() {
     }
   }
 
-  // DataTables columns config
+  // ══════════════════════════════════════════════════════════
+  // COLUMNAS DE DATATABLE
+  // ══════════════════════════════════════════════════════════
+
   const userColumns = [
     { key: 'nombre', label: 'Nombre Completo', sortable: true, render: (u) => <strong>{u.nombre}</strong> },
     { key: 'correo', label: 'Correo Electrónico', sortable: true },
@@ -242,6 +290,7 @@ export default function UsuariosModule() {
       key: 'numero_documento',
       label: 'Documento',
       sortable: true,
+      /** Concatena tipo + número: "V-12345678" */
       render: (u) => `${u.tipo_documento || 'V'}-${u.numero_documento || 'N/A'}`
     },
     { key: 'telefono', label: 'Teléfono', sortable: true, render: (u) => u.telefono || '-' },
@@ -249,6 +298,7 @@ export default function UsuariosModule() {
       key: 'fk_estatus',
       label: 'Estatus',
       sortable: true,
+      /** Badge con color condicional: verde=activo, rojo=inactivo */
       render: (u) => (
         <span className={`badge ${u.fk_estatus === 1 ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' : 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25'}`}>
           {u.status_name}
@@ -324,9 +374,12 @@ export default function UsuariosModule() {
     }
   ]
 
+  // ══════════════════════════════════════════════════════════
+  // JSX — Template
+  // ══════════════════════════════════════════════════════════
   return (
     <div className="fade-in-up">
-      {/* Tab Selector */}
+      {/* Tabs: Usuarios / Perfiles / Módulos (3 tabs en vez de 2) */}
       <div className="card glass-card mb-4 border border-secondary border-opacity-10">
         <div className="card-body p-2 d-flex gap-2">
           <button
@@ -366,7 +419,6 @@ export default function UsuariosModule() {
         </div>
       ) : (
         <div>
-          {/* Header row */}
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h5 className="fw-bold text-white mb-0">
               {activeTab === 'users' && 'Usuarios del Sistema'}
@@ -386,34 +438,23 @@ export default function UsuariosModule() {
             </button>
           </div>
 
-          {/* DataTable render */}
+          {/* DataTable condicional según tab activo */}
           {activeTab === 'users' && (
-            <DataTable
-              data={users}
-              columns={userColumns}
-              searchPlaceholder="Buscar usuario por nombre, correo..."
-            />
+            <DataTable data={users} columns={userColumns}
+              searchPlaceholder="Buscar usuario por nombre, correo..." />
           )}
-
           {activeTab === 'profiles' && (
-            <DataTable
-              data={profiles}
-              columns={profileColumns}
-              searchPlaceholder="Buscar perfil por nombre, compañía..."
-            />
+            <DataTable data={profiles} columns={profileColumns}
+              searchPlaceholder="Buscar perfil por nombre, compañía..." />
           )}
-
           {activeTab === 'modules' && (
-            <DataTable
-              data={modules}
-              columns={moduleColumns}
-              searchPlaceholder="Buscar módulo por nombre..."
-            />
+            <DataTable data={modules} columns={moduleColumns}
+              searchPlaceholder="Buscar módulo por nombre..." />
           )}
         </div>
       )}
 
-      {/* Modal Dialog */}
+      {/* ── Modal (3 tipos de formulario según modalType) ── */}
       {showModal && (
         <div className="modal d-block show" tabIndex="-1" role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
           <div className="modal-dialog modal-dialog-centered" role="document">
@@ -428,38 +469,31 @@ export default function UsuariosModule() {
                 <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)} aria-label="Close"></button>
               </div>
 
+              {/* ── Formulario de Usuario ── */}
               {modalType === 'user' && (
                 <form onSubmit={handleUserSubmit}>
                   <div className="modal-body p-4 d-flex flex-column gap-3">
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Nombre Completo *</label>
-                      <input
-                        type="text"
-                        className="form-control"
+                      <input type="text" className="form-control"
                         value={userForm.nombre}
                         onChange={e => setUserForm({...userForm, nombre: e.target.value})}
-                        required
-                      />
+                        required />
                     </div>
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Correo Electrónico *</label>
-                      <input
-                        type="email"
-                        className="form-control"
+                      <input type="email" className="form-control"
                         value={userForm.correo}
                         onChange={e => setUserForm({...userForm, correo: e.target.value})}
-                        required
-                      />
+                        required />
                     </div>
-
+                    {/* Tipo y número de documento en fila */}
                     <div className="row g-2">
                       <div className="col-4">
                         <label className="form-label text-secondary small fw-semibold">Tipo Doc.</label>
-                        <select
-                          className="form-select"
+                        <select className="form-select"
                           value={userForm.tipo_documento}
-                          onChange={e => setUserForm({...userForm, tipo_documento: e.target.value})}
-                        >
+                          onChange={e => setUserForm({...userForm, tipo_documento: e.target.value})}>
                           <option value="V">V</option>
                           <option value="E">E</option>
                           <option value="J">J</option>
@@ -468,45 +502,31 @@ export default function UsuariosModule() {
                       </div>
                       <div className="col-8">
                         <label className="form-label text-secondary small fw-semibold">Número Documento</label>
-                        <input
-                          type="text"
-                          className="form-control"
+                        <input type="text" className="form-control"
                           value={userForm.numero_documento}
-                          onChange={e => setUserForm({...userForm, numero_documento: e.target.value})}
-                        />
+                          onChange={e => setUserForm({...userForm, numero_documento: e.target.value})} />
                       </div>
                     </div>
-
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Teléfono</label>
-                      <input
-                        type="text"
-                        className="form-control"
+                      <input type="text" className="form-control"
                         value={userForm.telefono}
-                        onChange={e => setUserForm({...userForm, telefono: e.target.value})}
-                      />
+                        onChange={e => setUserForm({...userForm, telefono: e.target.value})} />
                     </div>
-
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">
                         {isEditing ? 'Nueva Contraseña (dejar vacío para mantener)' : 'Contraseña *'}
                       </label>
-                      <input
-                        type="password"
-                        className="form-control"
+                      <input type="password" className="form-control"
                         value={userForm.password}
                         onChange={e => setUserForm({...userForm, password: e.target.value})}
-                        required={!isEditing}
-                      />
+                        required={!isEditing} />
                     </div>
-
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Estatus</label>
-                      <select
-                        className="form-select"
+                      <select className="form-select"
                         value={userForm.fk_estatus}
-                        onChange={e => setUserForm({...userForm, fk_estatus: e.target.value})}
-                      >
+                        onChange={e => setUserForm({...userForm, fk_estatus: e.target.value})}>
                         <option value="1">Activo</option>
                         <option value="2">Inactivo</option>
                       </select>
@@ -519,27 +539,23 @@ export default function UsuariosModule() {
                 </form>
               )}
 
+              {/* ── Formulario de Perfil ── */}
               {modalType === 'profile' && (
                 <form onSubmit={handleProfileSubmit}>
                   <div className="modal-body p-4 d-flex flex-column gap-3">
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Nombre del Perfil *</label>
-                      <input
-                        type="text"
-                        className="form-control"
+                      <input type="text" className="form-control"
                         value={profileForm.nombre_perfil}
                         onChange={e => setProfileForm({...profileForm, nombre_perfil: e.target.value})}
-                        required
-                      />
+                        required />
                     </div>
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Compañía *</label>
-                      <select
-                        className="form-select"
+                      <select className="form-select"
                         value={profileForm.fk_compania}
                         onChange={e => setProfileForm({...profileForm, fk_compania: e.target.value})}
-                        required
-                      >
+                        required>
                         <option value="">Seleccione...</option>
                         {companies.map(c => (
                           <option key={c.id} value={c.id}>{c.name_razon_social}</option>
@@ -548,11 +564,9 @@ export default function UsuariosModule() {
                     </div>
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Sucursal (opcional)</label>
-                      <select
-                        className="form-select"
+                      <select className="form-select"
                         value={profileForm.fk_sucursal}
-                        onChange={e => setProfileForm({...profileForm, fk_sucursal: e.target.value})}
-                      >
+                        onChange={e => setProfileForm({...profileForm, fk_sucursal: e.target.value})}>
                         <option value="">Todas las Sucursales</option>
                         {branches.map(b => (
                           <option key={b.id} value={b.id}>{b.nombre_sucursal}</option>
@@ -567,18 +581,16 @@ export default function UsuariosModule() {
                 </form>
               )}
 
+              {/* ── Formulario de Módulo (el más simple) ── */}
               {modalType === 'module' && (
                 <form onSubmit={handleModuleSubmit}>
                   <div className="modal-body p-4 d-flex flex-column gap-3">
                     <div className="form-group">
                       <label className="form-label text-secondary small fw-semibold">Nombre del Módulo *</label>
-                      <input
-                        type="text"
-                        className="form-control"
+                      <input type="text" className="form-control"
                         value={moduleForm.nombre_modulo}
                         onChange={e => setModuleForm({...moduleForm, nombre_modulo: e.target.value})}
-                        required
-                      />
+                        required />
                     </div>
                   </div>
                   <div className="modal-footer border-top border-secondary border-opacity-25 p-3">

@@ -1,12 +1,27 @@
 /* ============================================================
-   INVENTARIO SYSTEM — Global Styles
-   Design: Dark glassmorphism + violet/cyan accent palette
+   INVENTARIO SYSTEM — Estilos Globales (index.css)
+   
+   EQUIVALENTE ANGULAR: Este archivo sería como "styles.scss" definido en
+   angular.json > styles: ["src/styles.scss"]. Contiene estilos globales
+   que aplican a TODA la aplicación.
+
+   En Angular, importarías Google Fonts en styles.scss o en index.html.
+   En Vite/React, se importa este archivo desde main.jsx.
+
+   Diseño: Dark glassmorphism + paleta de acentos violeta/cyan
    ============================================================ */
 
+/* Importa la fuente Inter desde Google Fonts (tipografía moderna sans-serif) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* ── CSS Variables ─────────────────────────────────────────── */
+/* ── CSS Variables (Custom Properties) ─────────────────────────
+   EQUIVALENTE ANGULAR: Sería como definir variables SCSS en un archivo
+   _variables.scss y usarlas con $variable. La ventaja de CSS variables
+   es que se pueden cambiar dinámicamente desde JavaScript (como se hace
+   en App.jsx para cambiar temas en tiempo de ejecución).
+   ────────────────────────────────────────────────────────────── */
 :root {
+  /* Fondos */
   --bg-base:        #0b0d17;
   --bg-surface:     #12152a;
   --bg-card:        rgba(255,255,255,0.05);
@@ -14,32 +29,40 @@
   --border:         rgba(255,255,255,0.08);
   --border-focus:   rgba(139,92,246,0.7);
 
+  /* Colores de acento */
   --accent-violet:  #8b5cf6;
   --accent-cyan:    #06b6d4;
   --accent-green:   #10b981;
   --accent-orange:  #f59e0b;
   --accent-red:     #ef4444;
 
+  /* Gradientes */
   --gradient-main:  linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
   --gradient-bg:    radial-gradient(ellipse at 20% 50%, rgba(139,92,246,0.15) 0%, transparent 60%),
                     radial-gradient(ellipse at 80% 20%, rgba(6,182,212,0.12) 0%, transparent 55%),
                     #0b0d17;
 
+  /* Colores de texto */
   --text-primary:   #f1f5f9;
   --text-secondary: #94a3b8;
   --text-muted:     #475569;
 
+  /* Bordes redondeados (border-radius) */
   --radius-sm:  8px;
   --radius-md:  12px;
   --radius-lg:  20px;
   --radius-xl:  28px;
 
+  /* Sombras y transiciones */
   --shadow-glow:  0 0 40px rgba(139,92,246,0.25);
   --shadow-card:  0 8px 32px rgba(0,0,0,0.4);
   --transition:   all 0.25s cubic-bezier(0.4,0,0.2,1);
 }
 
-/* ── Reset ─────────────────────────────────────────────────── */
+/* ── Reset CSS ─────────────────────────────────────────────────
+   Resetea márgenes, paddings y box-sizing para consistencia.
+   En Angular + SCSS normalmente usarías normalize.css o similar.
+   ────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { font-size: 16px; scroll-behavior: smooth; }
@@ -50,15 +73,20 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: antialiased; /* Suaviza el renderizado de fuentes en WebKit */
 }
 
-/* ── Scrollbar ─────────────────────────────────────────────── */
+/* ── Scrollbar personalizada (solo Chrome/Edge/Safari) ────────
+   Firefox usa scrollbar-width y scrollbar-color en su lugar.
+   ────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-surface); }
 ::-webkit-scrollbar-thumb { background: var(--accent-violet); border-radius: 3px; }
 
-/* ── Buttons ───────────────────────────────────────────────── */
+/* ── Botones base ──────────────────────────────────────────────
+   Estas clases se sobrescriben parcialmente en bootstrap-custom.css
+   cuando se usa Bootstrap. Aquí definen el estilo "from scratch".
+   ────────────────────────────────────────────────────────────── */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -76,18 +104,20 @@ body {
   white-space: nowrap;
 }
 
+/* Botón primario con gradiente y efecto de elevación al hover */
 .btn-primary {
   background: var(--gradient-main);
   color: #fff;
   box-shadow: 0 4px 20px rgba(139,92,246,0.4);
 }
 .btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
+  transform: translateY(-2px);      /* Se eleva 2px al pasar el mouse */
   box-shadow: 0 8px 30px rgba(139,92,246,0.55);
 }
 .btn-primary:active { transform: translateY(0); }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
+/* Botón "ghost" (transparente con borde) */
 .btn-ghost {
   background: transparent;
   color: var(--text-secondary);
@@ -95,7 +125,10 @@ body {
 }
 .btn-ghost:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: rgba(255,255,255,0.15); }
 
-/* ── Form inputs ───────────────────────────────────────────── */
+/* ── Inputs de formulario ──────────────────────────────────────
+   Estilos base para inputs. Se complementan/sobrescriben con
+   bootstrap-custom.css cuando Bootstrap está activo.
+   ────────────────────────────────────────────────────────────── */
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-label { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); letter-spacing: 0.5px; text-transform: uppercase; }
 
@@ -115,10 +148,13 @@ body {
 .form-input:focus {
   border-color: var(--border-focus);
   background: rgba(139,92,246,0.06);
-  box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+  box-shadow: 0 0 0 3px rgba(139,92,246,0.15); /* Anillo de foco violeta */
 }
 
-/* ── Glass card ─────────────────────────────────────────────── */
+/* ── Glass Card (Efecto Glassmorphism) ─────────────────────────
+   Efecto de vidrio esmerilado con backdrop-filter: blur().
+   Se usa en login, cards del dashboard, modales, etc.
+   ────────────────────────────────────────────────────────────── */
 .glass-card {
   background: rgba(18,21,42,0.7);
   backdrop-filter: blur(20px);
@@ -128,7 +164,10 @@ body {
   box-shadow: var(--shadow-card);
 }
 
-/* ── Gradient text ──────────────────────────────────────────── */
+/* ── Texto con gradiente ───────────────────────────────────────
+   Hace que el texto tenga un gradiente de colores en vez de un
+   color sólido. Usado en títulos destacados.
+   ────────────────────────────────────────────────────────────── */
 .gradient-text {
   background: var(--gradient-main);
   -webkit-background-clip: text;
@@ -136,7 +175,9 @@ body {
   background-clip: text;
 }
 
-/* ── Spinner ─────────────────────────────────────────────────── */
+/* ── Spinner de carga ──────────────────────────────────────────
+   Animación de rotación infinita para indicadores de carga.
+   ────────────────────────────────────────────────────────────── */
 @keyframes spin { to { transform: rotate(360deg); } }
 .spinner {
   width: 20px; height: 20px;
@@ -147,7 +188,9 @@ body {
   display: inline-block;
 }
 
-/* ── Alert ───────────────────────────────────────────────────── */
+/* ── Alertas ───────────────────────────────────────────────────
+   Estilos para mensajes de error y éxito.
+   ────────────────────────────────────────────────────────────── */
 .alert {
   padding: 12px 16px;
   border-radius: var(--radius-md);
@@ -159,13 +202,20 @@ body {
 .alert-error   { background: rgba(239,68,68,0.12);  border: 1px solid rgba(239,68,68,0.3);  color: #fca5a5; }
 .alert-success { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
 
-/* ── Fade-in animation ───────────────────────────────────────── */
+/* ── Animación Fade In Up ──────────────────────────────────────
+   Animación de entrada: el elemento aparece desde abajo con fade.
+   Se usa en la clase .fade-up (no confundir con .fade-in-up de bootstrap-custom.css).
+   ────────────────────────────────────────────────────────────── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .fade-up { animation: fadeUp 0.5s ease forwards; }
 
+/* ── Animación Pulse Glow ──────────────────────────────────────
+   Efecto de pulso luminoso. Se puede aplicar a elementos que
+   necesiten llamar la atención (no está en uso actualmente).
+   ────────────────────────────────────────────────────────────── */
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 20px rgba(139,92,246,0.3); }
   50%       { box-shadow: 0 0 40px rgba(139,92,246,0.6); }
